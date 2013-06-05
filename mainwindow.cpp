@@ -62,14 +62,9 @@ void MainWindow::createTrayIcon() {
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayMenu);
 
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
+    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(on_trayIcon_clicked(QSystemTrayIcon::ActivationReason)));
 
     trayIcon->setIcon(QIcon(":/resource/icon.png"));
-}
-
-void MainWindow::trayIconClicked(QSystemTrayIcon::ActivationReason reason) {
-    if (reason == QSystemTrayIcon::Trigger)
-        this->show();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -83,7 +78,15 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::timerEvent(QTimerEvent *) {
     IplImage *image = cvQueryFrame(camera);
-    ui->imageLabel->setPixmap(toPixmap(image));
+    IplImage *show;
+
+    if (ui->actionDebug->isChecked())
+        show = processor.getDebug();
+    else
+        show = image;
+
+    if (show)
+        ui->imageLabel->setPixmap(toPixmap(show));
 }
 
 QPixmap MainWindow::toPixmap(IplImage *cvimage) {
@@ -124,4 +127,24 @@ QPixmap MainWindow::toPixmap(IplImage *cvimage) {
 
     return QPixmap::fromImage(camImage);
 
+}
+
+void MainWindow::on_trayIcon_clicked(QSystemTrayIcon::ActivationReason reason) {
+    if (reason == QSystemTrayIcon::Trigger)
+        this->show();
+}
+
+void MainWindow::on_actionCalibrate_triggered()
+{
+    processor.doCalibrate();
+}
+
+void MainWindow::on_actionCamera_toggled(bool set)
+{
+    ui->actionDebug->setChecked(!set);
+}
+
+void MainWindow::on_actionDebug_toggled(bool set)
+{
+    ui->actionCamera->setChecked(!set);
 }

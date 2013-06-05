@@ -40,11 +40,15 @@
    </attribute>
    <addaction name="actionCamera"/>
    <addaction name="actionDebug"/>
+   <addaction name="separator"/>
    <addaction name="actionCalibrate"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionCamera">
    <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
     <bool>true</bool>
    </property>
    <property name="text">

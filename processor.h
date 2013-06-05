@@ -45,6 +45,7 @@ private:
      * @brief calibrating mówi czy w następnej ramce kalibrujemy
      */
     bool calibrating;
+    IplImage* debug;
 };
 
 #endif // PROCESSOR_H

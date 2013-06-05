@@ -8,6 +8,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+#include "processor.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -28,6 +30,7 @@ private:
     void createTrayIcon();
     void setIcon();
     void closeEvent(QCloseEvent *);
+    QPixmap toPixmap(IplImage *cvimage);
 
     Ui::MainWindow *ui;
 
@@ -39,10 +42,13 @@ private:
     CvCapture *camera;
     QImage camImage;
 
-    QPixmap toPixmap(IplImage *cvimage);
+    Processor processor;
 
 private slots:
-    void trayIconClicked(QSystemTrayIcon::ActivationReason);
+    void on_trayIcon_clicked(QSystemTrayIcon::ActivationReason);
+    void on_actionCalibrate_triggered();
+    void on_actionCamera_toggled(bool arg1);
+    void on_actionDebug_toggled(bool arg1);
 };
 
 #endif // MAINWINDOW_H

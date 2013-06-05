@@ -1,7 +1,8 @@
 #include "processor.h"
 
 Processor::Processor()
-    : calibrating(false)
+    : calibrating(false),
+      debug(NULL)
 {
 }
 
@@ -19,13 +20,15 @@ Gesture Processor::process(IplImage *frame) {
     // obiekt Processor może mieć przecież pamięć
     // ale to już jak chcecie
 
+    //debug = ... jakieś przetworzenia do wyświetlenia obok kamery
+
     return GNone; // albo jakiś inny gest, jeśli wykryty
 }
 
 IplImage* Processor::getDebug() {
     // zwracamy obrazek-przetworzenie obrazka z kamery (podgląd do testowania jakichś przetworzeń etc.)
     // ew. NULL, jeśli nie ma już potrzeby niczego podglądać
-    return NULL;
+    return debug;
 }
 
 void Processor::doCalibrate() {
