@@ -5,3 +5,6 @@
 !*.ui
 !*.qrc
 !*.pro
+!*.ico
+!*.svg
+!*.icns
