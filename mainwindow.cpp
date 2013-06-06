@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowIcon(QIcon(":/resource/icon.png"));
     this->setWindowTitle("Tangible2");
     this->layout()->setSizeConstraint(QLayout::SetFixedSize);
+    this->move(50, 50);
 
     createActions();
     createTrayIcon();
