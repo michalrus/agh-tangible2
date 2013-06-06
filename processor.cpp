@@ -57,6 +57,8 @@ Mat Processor::binarize(const Mat& frame) {
         if (strelCloseSize < 3)
             strelCloseSize = 3; // najmniejszy to 3
         strelClose = getStructuringElement(CV_SHAPE_ELLIPSE, Size(strelCloseSize, strelCloseSize));
+
+        prevCols = frame.cols;
     }
 
     Mat binary;
