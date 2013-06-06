@@ -28,6 +28,8 @@ OTHER_FILES +=
 RESOURCES += \
     resource.qrc
 
+RC_FILE = tangible2.rc
+
 INCLUDEPATH += C:/opencv/include
 
 LIBS += -LC:/opencv/lib \
