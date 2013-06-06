@@ -41,16 +41,48 @@ public:
 
 private:
     /**
+     * @brief binarize przeprowadza binaryzację ramki (pod kątem zostawienia tylko markerów)
+     * @param frame ramka z obrazem
+     * @return zbinaryzowany obraz
+     */
+    cv::Mat binarize(const cv::Mat& frame);
+
+    /**
      * @brief calibrate dokonuje kalibracji na podanej ramce
      * @param frame ramka używana do kalibracji
      */
     void calibrate(const cv::Mat& frame);
 
     /**
+     * @brief findMarkers odszukuje markery na zbinaryzowanym obrazku
+     * @param binary ramka zbinaryzowanego obrazu
+     */
+    void findMarkers(const cv::Mat& binary);
+
+    /**
      * @brief calibrating mówi czy w następnej ramce kalibrujemy
      */
     bool calibrating;
+
+    /**
+     * @brief debug macierz z obrazkiem wyświetlanym jako debug w GUI
+     */
     cv::Mat debug;
+
+    /**
+     * @brief strel element strukturalny do operacji otwarcia
+     */
+    cv::Mat strelOpen;
+
+    /**
+     * @brief strelOpen element strukturalny do operacji zamknięcia
+     */
+    cv::Mat strelClose;
+
+    /**
+     * @brief prevCols szerokość poprzedniej ramki (do odpowiedniego zmieniania strel)
+     */
+    int prevCols;
 };
 
 #endif // PROCESSOR_H
