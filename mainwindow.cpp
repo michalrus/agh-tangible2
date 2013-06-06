@@ -84,6 +84,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
     capture >> frame;
 
     Gesture gest = processor.process(frame);
+    gestureHandler.handle(gest);
 
     const Mat &show = (ui->actionDebug->isChecked() ? processor.getDebug() : frame);
 

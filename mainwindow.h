@@ -9,6 +9,7 @@
 #include <opencv/highgui.h>
 
 #include "processor.h"
+#include "gesturehandler.h"
 
 namespace Ui {
 class MainWindow;
@@ -42,6 +43,7 @@ private:
 
     cv::VideoCapture capture;
     Processor processor;
+    GestureHandler gestureHandler;
 
 private slots:
     void on_trayIcon_clicked(QSystemTrayIcon::ActivationReason);

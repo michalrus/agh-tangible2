@@ -14,10 +14,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    processor.cpp
+    processor.cpp \
+    gesturehandler.cpp
 
 HEADERS  += mainwindow.h \
-    processor.h
+    processor.h \
+    gesturehandler.h
 
 FORMS    += mainwindow.ui
 
