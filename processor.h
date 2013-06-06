@@ -36,11 +36,17 @@ public:
     const cv::Mat& getDebug() const;
 
     /**
-     * @brief doCalibrate jest wywoływane, gdy następna ramka ma zostać użyta do kalibracji.
+     * @brief doCalibrate jest wywoływane przez GUI, gdy następna ramka ma zostać użyta do kalibracji.
      */
     void doCalibrate();
 
 private:
+    /**
+     * @brief calibrate dokonuje kalibracji na podanej ramce
+     * @param frame ramka używana do kalibracji
+     */
+    void calibrate(const cv::Mat& frame);
+
     /**
      * @brief calibrating mówi czy w następnej ramce kalibrujemy
      */

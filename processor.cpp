@@ -9,7 +9,8 @@ Processor::Processor()
 
 Gesture Processor::process(const Mat& frame) {
     if (calibrating) {
-        // przeprowadź kalibrację na aktualnej ramce
+        // jeśli kalibrujemy w tej ramce:
+        calibrate(frame);
         calibrating = false;
         return GNone;
     }
@@ -35,6 +36,17 @@ Gesture Processor::process(const Mat& frame) {
     grayscale.copyTo(debug);
 
     return GNone; // albo jakiś inny gest na stoliku, jeśli wykryty
+}
+
+void Processor::calibrate(const Mat& frame) {
+    // przeprowadź kalibrację na ramce frame
+
+    // oczywiście tutaj też możemy ustawiać sobie debug
+    // (ale pewnie nie będzie go widać przez tę jedną ramkę)
+
+    // a z drugiej strony nikt nie każe w process()
+    // wyłączać kalibracji po jednej ramce (linijka "calibrating = false;")
+    // można wyłączyć np. dopiero po 50 (czyli jakieś 1.5 sekundy)
 }
 
 const Mat& Processor::getDebug() const {
