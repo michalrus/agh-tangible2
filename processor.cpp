@@ -29,6 +29,20 @@ Gesture Processor::process(const Mat& frame) {
     Mat grayscale;
     cvtColor(frame, grayscale, CV_BGR2GRAY); // np. konwersja na odcienie szarości
 
+    // macierze można też podawać jednocześnie jako źródło i docelową...
+    // ale nie wiem na ile to jest bezpieczne (chyba nadpisuje macierz
+    // źródłową w trakcie działania, więc przy binaryzacji spoko, ale jak
+    // w innym algorytmie będzie potrzeba się odwoływać do już zmienionych
+    // pikseli w źrodle? nie wiem.
+    threshold(grayscale, grayscale, 85, 255, 0);
+
+    // bezpieczniejsza wersja (?)
+    /*
+    Mat binary;
+    threshold(grayscale, binary, 85, 255, 0);
+    binary.copyTo(debug); // wtedy już bez tego kopiowania niżej, bo bez sensu ;)
+    */
+
     // reference opencv do C++ jest tutaj:
     // http://opencv.willowgarage.com/documentation/cpp/
 
