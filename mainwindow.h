@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     
 public:
-    explicit MainWindow(CvCapture *camera, QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 protected:
@@ -31,6 +31,7 @@ private:
     void setIcon();
     void closeEvent(QCloseEvent *);
     QPixmap toPixmap(IplImage *cvimage);
+    QImage mat2QImage(const cv::Mat& src);
 
     Ui::MainWindow *ui;
 
@@ -39,9 +40,7 @@ private:
     QAction *open;
     QAction *quit;
 
-    CvCapture *camera;
-    QImage camImage;
-
+    cv::VideoCapture capture;
     Processor processor;
 
 private slots:

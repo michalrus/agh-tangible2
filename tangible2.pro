@@ -28,9 +28,14 @@ RESOURCES += \
 
 INCLUDEPATH += C:\\opencv\\build\\include
 
-LIBS += -LC:\\opencv\\build\\x86\\vc11\\lib \
-    -lopencv_core245 \
-    -lopencv_highgui245 \
-    -lopencv_imgproc245 \
-    -lopencv_features2d245 \
-    -lopencv_calib3d245
+LIBS += -LD:\\opencv\\builds\\lib \
+    -lopencv_core249.dll \
+    -lopencv_video249.dll \
+    -lopencv_ml249.dll \
+    -lopencv_objdetect249.dll \
+    -lopencv_contrib249.dll \
+    -lopencv_legacy249.dll \
+    -lopencv_highgui249.dll \
+    -lopencv_imgproc249.dll \
+    -lopencv_features2d249.dll \
+    -lopencv_calib3d249.dll

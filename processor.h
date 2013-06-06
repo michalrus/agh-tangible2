@@ -27,13 +27,13 @@ public:
      * @param frame Ramka obrazu z kamery. Wewnętrzny format OpenCV.
      * @return Zwraca gest użytkownika, jeśli wykryty. Jeśli nie: Gesture.None.
      */
-    Gesture process(IplImage* frame);
+    Gesture process(const cv::Mat& frame);
 
     /**
      * @brief getDebug
      * @return obrazek poglądowy (po jakichś przetworzeniach itd.) rysowany w oknie degug
      */
-    IplImage* getDebug();
+    const cv::Mat& getDebug() const;
 
     /**
      * @brief doCalibrate jest wywoływane, gdy następna ramka ma zostać użyta do kalibracji.
@@ -45,7 +45,7 @@ private:
      * @brief calibrating mówi czy w następnej ramce kalibrujemy
      */
     bool calibrating;
-    IplImage* debug;
+    cv::Mat debug;
 };
 
 #endif // PROCESSOR_H

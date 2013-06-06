@@ -3,21 +3,23 @@
 
 #include <QMenu>
 #include <QCloseEvent>
+#include <QMessageBox>
 
-MainWindow::MainWindow(CvCapture *cam, QWidget *parent) :
+using namespace cv;
+
+MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    camera(cam)
+    capture(0) // default camera
 {
+    if (!capture.isOpened()) {
+        QMessageBox::critical(this, tr("Tangible2"), tr("Could not open a camera."), QMessageBox::Ok);
+        qApp->quit();
+    }
+
     // ui
 
     ui->setupUi(this);
-
-    // initialize camImage
-
-    QImage dummy(100, 100, QImage::Format_RGB32);
-    camImage = dummy;
-    ui->imageLabel->setPixmap(QPixmap::fromImage(camImage));
 
     // icons, tray
 
@@ -77,56 +79,43 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::timerEvent(QTimerEvent *) {
-    IplImage *image = cvQueryFrame(camera);
-    IplImage *show;
+    Mat frame;
+    capture >> frame;
 
-    if (ui->actionDebug->isChecked())
-        show = processor.getDebug();
-    else
-        show = image;
+    Gesture gest = processor.process(frame);
 
-    if (show)
-        ui->imageLabel->setPixmap(toPixmap(show));
+    const Mat &show = (ui->actionDebug->isChecked() ? processor.getDebug() : frame);
+
+    ui->imageLabel->setPixmap(QPixmap::fromImage(mat2QImage(show)));
 }
 
-QPixmap MainWindow::toPixmap(IplImage *cvimage) {
-    int cvIndex, cvLineStart;
+QImage MainWindow::mat2QImage(const cv::Mat &src) {
+    QImage dest(src.cols, src.rows, QImage::Format_ARGB32);
 
-    switch (cvimage->depth) {
-        case IPL_DEPTH_8U:
-            switch (cvimage->nChannels) {
-                case 3:
-                    if ( (cvimage->width != camImage.width()) || (cvimage->height != camImage.height()) ) {
-                        QImage temp(cvimage->width, cvimage->height, QImage::Format_RGB32);
-                        camImage = temp;
-                    }
-                    cvIndex = 0; cvLineStart = 0;
-                    for (int y = 0; y < cvimage->height; y++) {
-                        unsigned char red,green,blue;
-                        cvIndex = cvLineStart;
-                        for (int x = 0; x < cvimage->width; x++) {
-                            red = cvimage->imageData[cvIndex+2];
-                            green = cvimage->imageData[cvIndex+1];
-                            blue = cvimage->imageData[cvIndex+0];
+    for (int y = 0; y < src.rows; ++y) {
+        QRgb *destrow = (QRgb*)dest.scanLine(y);
 
-                            camImage.setPixel(x,y,qRgb(red, green, blue));
-                            cvIndex += 3;
-                        }
-                        cvLineStart += cvimage->widthStep;
-                    }
-                    break;
-                default:
-                    qWarning("This number of channels is not supported\n");
-                    break;
+        for (int x = 0; x < src.cols; ++x) {
+            uchar r, g, b;
+
+            if (src.type() == CV_8UC3) { // 8-bit unsigned int * 3 channels
+                const Vec3b& vec = src.at<Vec3b>(y,x);
+                r = vec(2);
+                g = vec(1);
+                b = vec(0);
             }
-            break;
-        default:
-            qWarning("This type of IplImage is not implemented\n");
-            break;
+            else if (src.type() == CV_8UC1) { // 8-bit unsigned int * 1 channel
+                r = g = b = src.at<uchar>(y,x);
+            }
+            else { // unsupported type, display green
+                r = 0; g = 255; b = 0;
+            }
+
+            destrow[x] = qRgba(r, g, b, 255);
+        }
     }
 
-    return QPixmap::fromImage(camImage);
-
+    return dest;
 }
 
 void MainWindow::on_trayIcon_clicked(QSystemTrayIcon::ActivationReason reason) {

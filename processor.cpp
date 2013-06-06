@@ -1,12 +1,13 @@
 #include "processor.h"
 
+using namespace cv;
+
 Processor::Processor()
-    : calibrating(false),
-      debug(NULL)
+    : calibrating(false)
 {
 }
 
-Gesture Processor::process(IplImage *frame) {
+Gesture Processor::process(const Mat& frame) {
     if (calibrating) {
         // przeprowadź kalibrację na aktualnej ramce
         calibrating = false;
@@ -20,14 +21,24 @@ Gesture Processor::process(IplImage *frame) {
     // obiekt Processor może mieć przecież pamięć
     // ale to już jak chcecie
 
-    //debug = ... jakieś przetworzenia do wyświetlenia obok kamery
+    // przykładowe przetworzenia
+    Mat grayscale;
+    cvtColor(frame, grayscale, CV_BGR2GRAY); // np. konwersja na odcienie szarości
 
-    return GNone; // albo jakiś inny gest, jeśli wykryty
+    // reference opencv do C++ jest tutaj:
+    // http://opencv.willowgarage.com/documentation/cpp/
+
+    // jakieś przetworzenia do wyświetlenia w UI obok kamery
+    // ważne: musimy skopiować dane do this->debug, ponieważ
+    // po wyjściu z tej funkcji wszystkie jej lokalne macierze
+    // zostaną zwolnione
+    grayscale.copyTo(debug);
+
+    return GNone; // albo jakiś inny gest na stoliku, jeśli wykryty
 }
 
-IplImage* Processor::getDebug() {
+const Mat& Processor::getDebug() const {
     // zwracamy obrazek-przetworzenie obrazka z kamery (podgląd do testowania jakichś przetworzeń etc.)
-    // ew. NULL, jeśli nie ma już potrzeby niczego podglądać
     return debug;
 }
 
