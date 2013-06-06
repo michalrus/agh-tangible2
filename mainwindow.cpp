@@ -4,19 +4,18 @@
 #include <QMenu>
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <QFileDialog>
+
+#include <opencv2/highgui/highgui_c.h>
 
 using namespace cv;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    capture(0) // default camera
+    timerId(-1),
+    fromCamera(false)
 {
-    if (!capture.isOpened()) {
-        QMessageBox::critical(this, tr("Tangible2"), tr("Could not open a camera."), QMessageBox::Ok);
-        qApp->quit();
-    }
-
     // ui
 
     ui->setupUi(this);
@@ -33,9 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     trayIcon->show();
 
-    // timer
-
-    startTimer(33); // 33 ms -> ~30 fps
+    toggleFromCamera(true);
 }
 
 MainWindow::~MainWindow()
@@ -81,7 +78,18 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::timerEvent(QTimerEvent *) {
     Mat frame;
+
+    if (!capture.isOpened())
+        return;
+
     capture >> frame;
+
+    if (!fromCamera && frame.empty()) { // if it's the last frame, loop
+        capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+        capture >> frame;
+        if (frame.empty())
+            return;
+    }
 
     Gesture gest = processor.process(frame);
     gestureHandler.handle(gest);
@@ -132,10 +140,64 @@ void MainWindow::on_actionCalibrate_triggered()
 
 void MainWindow::on_actionCamera_toggled(bool set)
 {
-    ui->actionDebug->setChecked(!set);
+    toggleCamera(set);
 }
 
 void MainWindow::on_actionDebug_toggled(bool set)
 {
-    ui->actionCamera->setChecked(!set);
+    toggleCamera(!set);
+}
+
+void MainWindow::toggleCamera(bool set) {
+    ui->actionDebug->setChecked(!set);
+    ui->actionCamera->setChecked(set);
+}
+
+void MainWindow::on_actionFrom_file_toggled(bool set)
+{
+    toggleFromCamera(!set);
+}
+
+void MainWindow::on_actionFrom_cam0_toggled(bool set)
+{
+    toggleFromCamera(set);
+}
+
+void MainWindow::toggleFromCamera(bool set) {
+    if (!set) { // if from file
+        if (fromCamera) {
+            videoFile = QFileDialog::getOpenFileName(this, tr("Select video file"), "", tr("Video files (*.avi)"));
+            if (!videoFile.isEmpty()) {
+                killTimer(timerId);
+
+                capture.release();
+                capture.open(videoFile.toStdString());
+                if (!capture.isOpened()) {
+                    QMessageBox::warning(this, tr("Tangible2"), tr("Could not open ") + videoFile, QMessageBox::Ok);
+                }
+                else {
+                    fromCamera = false;
+
+                    double fps = capture.get(CV_CAP_PROP_FPS);
+                    timerId = startTimer(1000.0 / fps);
+                }
+            }
+        }
+    }
+    else { // if from cam0
+        if (!fromCamera) {
+            capture.release();
+            capture.open(0); // default camera
+            if (!capture.isOpened())
+                QMessageBox::warning(this, tr("Tangible2"), tr("Could not open a default camera."), QMessageBox::Ok);
+            else {
+                killTimer(timerId);
+                timerId = startTimer(33); // 33 ms -> ~30 fps
+            }
+        }
+        fromCamera = true;
+    }
+
+    ui->actionFrom_file->setChecked(/*capture.isOpened() &&*/ !fromCamera);
+    ui->actionFrom_cam0->setChecked(capture.isOpened() && fromCamera);
 }

@@ -5,8 +5,7 @@
 
 #include <QSystemTrayIcon>
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 
 #include "processor.h"
 #include "gesturehandler.h"
@@ -41,15 +40,23 @@ private:
     QAction *open;
     QAction *quit;
 
+    int timerId;
     cv::VideoCapture capture;
+    bool fromCamera;
+    QString videoFile;
     Processor processor;
     GestureHandler gestureHandler;
+
+    void toggleCamera(bool);
+    void toggleFromCamera(bool);
 
 private slots:
     void on_trayIcon_clicked(QSystemTrayIcon::ActivationReason);
     void on_actionCalibrate_triggered();
-    void on_actionCamera_toggled(bool arg1);
-    void on_actionDebug_toggled(bool arg1);
+    void on_actionCamera_toggled(bool);
+    void on_actionDebug_toggled(bool);
+    void on_actionFrom_file_toggled(bool);
+    void on_actionFrom_cam0_toggled(bool);
 };
 
 #endif // MAINWINDOW_H

@@ -42,6 +42,9 @@
    <addaction name="actionDebug"/>
    <addaction name="separator"/>
    <addaction name="actionCalibrate"/>
+   <addaction name="separator"/>
+   <addaction name="actionFrom_cam0"/>
+   <addaction name="actionFrom_file"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionCamera">
@@ -66,6 +69,28 @@
   <action name="actionCalibrate">
    <property name="text">
     <string>Calibrate</string>
+   </property>
+  </action>
+  <action name="actionFrom_file">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>From file…</string>
+   </property>
+  </action>
+  <action name="actionFrom_cam0">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>From camera(0)</string>
+   </property>
+   <property name="toolTip">
+    <string>From camera(0)</string>
    </property>
   </action>
  </widget>

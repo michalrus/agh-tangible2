@@ -1,8 +1,7 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
-#include<opencv/cv.h>
-#include<opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 
 /**
  * @brief Enum, który zwraca metoda Processor::process.
