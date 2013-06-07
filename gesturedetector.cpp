@@ -7,8 +7,8 @@ GestureDetector::GestureDetector()
 {
 }
 
-void GestureDetector::handle(std::string type, double x, double y) {
-    // std::cout << type << " @ (" << x << "," << y << ")" << std::endl;
+void GestureDetector::handle(size_t frameNumber, std::string type, double x, double y) {
+    std::cout << frameNumber << ": " << type << " @ (" << x << "," << y << ")" << std::endl;
 }
 
 void GestureDetector::back() {

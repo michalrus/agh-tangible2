@@ -13,7 +13,8 @@ using namespace cv;
 Processor::Processor()
     : calibrating(false),
       warping(false),
-      prevCols(0)
+      prevCols(0),
+      framesPassed(0)
 {
     buildKBContours();
 }
@@ -62,8 +63,10 @@ void Processor::process(const Mat& frame) {
         // rozpoznaj gest z pozycji i klas wykrytych markerów
         for (size_t i = 0; i < markers.size(); i++) {
             Point pos = markers[i].getCenterOnFrame();
-            gestureDetector.handle(markers[i].getName(), (double)pos.x / frame.cols, (double)pos.y / frame.rows);
+            gestureDetector.handle(framesPassed, markers[i].getName(), (double)pos.x / frame.cols, (double)pos.y / frame.rows);
         }
+
+        framesPassed++;
     }
 }
 

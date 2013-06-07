@@ -112,6 +112,11 @@ private:
     cv::Point frameCenter;
 
     /**
+     * @brief framesPassed liczba klatek, które upłynęły od początku działania programu
+     */
+    size_t framesPassed;
+
+    /**
      * @brief knownContours baza wiedzy (kontury kształty, które umiemy rozpoznać)
      */
     std::vector<Contour> knownContours;
