@@ -12,33 +12,39 @@ Processor::Processor()
 }
 
 Gesture Processor::process(const Mat& frame) {
-    // reference opencv do C++ jest tutaj:
-    // http://opencv.willowgarage.com/documentation/cpp/
-
-    // binaryzacja (potrzebna i do kształtów, i do kalibracji
+    // 0. binaryzacja (potrzebna i do działania, i do kalibracji
     Mat binary = binarize(frame);
 
-    // jeśli kalibrujemy w tej ramce:
-    if (calibrating) {
-        calibrate(binary);
-        calibrating = false;
-        return GNone;
-    }
-
-    // jeśli jednak nie kalibrujemy (czyli normalne wywołanie):
-
-    // 1. znajdź markery
+    // 1. znajdź markery (potrzebne i do działania, i do kalibracji
     findMarkers(binary);
 
-    // 2. wyświetl jakiś obraz w zakładce Debug
+    // 2. wyświetl wynik 0. i 1. w zakładce Debug
     // ważne: musimy skopiować dane do this->debug, ponieważ
     // po wyjściu z tej funkcji wszystkie jej lokalne macierze
     // zostaną (teoretycznie) zwolnione
     binary.copyTo(debug);
 
-    // 3. zwróć wykryty gest albo GNone (na obecnym etapie: tylko
-    // GNone...)
-    return GNone;
+    if (calibrating) {
+        // jeśli kalibrujemy w tej ramce:
+
+        calibrate(binary); // to jest do zmiany -- kalibracja chce
+                           // już dostać 4 rozpoznane prostokąty w
+                           // rogach, a nie ramkę, ale to zaraz
+
+        // następna ramka już nie będzie kalibracyjną
+        calibrating = false;
+
+        // jeśli kalibrujemy, to żadnego gestu nie ma
+        return GNone;
+    }
+    else {
+        // jeśli jednak nie kalibrujemy (czyli normalne wywołanie):
+
+        // ... rozpoznaj gest z pozycji i klas wykrytych markerów
+
+        // 3. zwróć wykryty gest albo GNone (jeśli żaden1)
+        return GNone;
+    }
 }
 
 Mat Processor::binarize(const Mat& frame) {
@@ -99,6 +105,22 @@ void Processor::findMarkers(const Mat& binary) {
     // zarówno z tej ramki jak i ew. z danych z poprzednich
     // obiekt Processor może mieć przecież jakąś pamięć
     // ale to już jak chcecie
+
+    // 1. znajdź kontury obiektów:
+
+    using std::vector;
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+
+    findContours(binary, contours, hierarchy,
+                 CV_RETR_CCOMP, CV_CHAIN_APPROX_TC89_KCOS);
+
+    drawContours(binary, contours, -1, Scalar(255, 255, 255));
+
+    if (!contours.size()) // avoid sigsegv ;)
+        return;
+
+    // 2. compare contours to our knowledge base (each-each)
 }
 
 const Mat& Processor::getDebug() const {
