@@ -1,7 +1,9 @@
 #include "processor.h"
 
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgproc/types_c.h>
+#include <QImage>
+
+//#include <opencv2/imgproc.hpp>
+//#include <opencv2/imgproc/types_c.h>
 
 using namespace cv;
 
@@ -9,27 +11,33 @@ Processor::Processor()
     : calibrating(false),
       prevCols(0)
 {
+    buildKBContours();
 }
 
 Gesture Processor::process(const Mat& frame) {
+    markers.clear();
+    frameArea = frame.cols * frame.rows;
+
     // 0. binaryzacja (potrzebna i do działania, i do kalibracji
     Mat binary = binarize(frame);
 
     // 1. znajdź markery (potrzebne i do działania, i do kalibracji
     findMarkers(binary);
 
-    // 2. wyświetl wynik 0. i 1. w zakładce Debug
+    // 2. wyświetl kopię ramki w zakładce Debug
     // ważne: musimy skopiować dane do this->debug, ponieważ
     // po wyjściu z tej funkcji wszystkie jej lokalne macierze
     // zostaną (teoretycznie) zwolnione
-    binary.copyTo(debug);
+    // (a do frame nie możemy pisać)
+    frame.copyTo(debug);
+
+    // 2.a. narysuj markery na debug
+    for (size_t i = 0; i < markers.size(); i++)
+        markers[i].drawOn(debug);
 
     if (calibrating) {
         // jeśli kalibrujemy w tej ramce:
-
-        calibrate(binary); // to jest do zmiany -- kalibracja chce
-                           // już dostać 4 rozpoznane prostokąty w
-                           // rogach, a nie ramkę, ale to zaraz
+        calibrate();
 
         // następna ramka już nie będzie kalibracyjną
         calibrating = false;
@@ -89,10 +97,13 @@ Mat Processor::binarize(const Mat& frame) {
     return binary;
 }
 
-void Processor::calibrate(const Mat& img) {
-    // przeprowadź kalibrację na ramce frame
+void Processor::calibrate() {
+    // przeprowadź kalibrację używając:
+    //
+    // vector<Marker> this->markers
+    //
 
-    // oczywiście tutaj też możemy ustawiać sobie debug
+    // oczywiście tutaj też możemy rysowaś sobie na debug
     // (ale pewnie nie będzie go widać przez tę jedną ramkę)
 
     // a z drugiej strony nikt nie każe w process()
@@ -121,6 +132,59 @@ void Processor::findMarkers(const Mat& binary) {
         return;
 
     // 2. compare contours to our knowledge base (each-each)
+
+    // jeszcze:
+    // użyć approxPolyDP? żeby "wygładzić" kształty -- jeśli miałby
+    // być jakiś problem z rozpoznawaniem po dodaniu kilku nowych
+
+    vector<std::string> recognizedShapes;
+
+    for (size_t idx = 0; idx < contours.size(); idx++) {
+        double bestMatch = INFINITY;
+        int bestI = -1;
+        for (size_t i = 0; i < knownContours.size(); i++) {
+            double match = matchShapes(contours[idx], knownContours[i].contour, CV_CONTOURS_MATCH_I1, 0);
+            if (bestI == -1 || match < bestMatch) {
+                bestI = i;
+                bestMatch = match;
+            }
+        }
+
+        recognizedShapes.push_back(knownContours[bestI].name);
+    }
+
+    for(int idx = 0; idx >= 0; idx = hierarchy[idx][0]) {
+        // jeśli pole konturu < 5%^2 pola ramki, nie uwzględniaj go jako markera
+        // ... czyli ostateczna rozgrywka ze "śmieciami"
+        // to samo gdy > 30%^2
+        double area = contourArea(contours[idx]);
+        if (area < 0.05 * 0.05 * frameArea || area > 0.30 * 0.30 * frameArea)
+            continue;
+
+        std::string name = recognizedShapes[idx];
+        if (hierarchy[idx][2] >= 0) { // if this contour has a hole (child) in it
+            // sprawdź czy pole dziecka nie jest za małe w stosunku
+            // do rodzica (czy to nie śmieć)
+            double holeArea = contourArea(contours[hierarchy[idx][2]]);
+            if (holeArea > 0.25 * area)
+                name = "e." + name;
+        }
+        markers.push_back(Marker(name, contours[idx]));
+    }
+
+//    std::cout << std::endl << "-- new frame" << std::endl;
+//    for (int i = 0; i < recognizedShapes.size(); i++)
+//        std::cout << i << " is a " << recognizedShapes[i] << std::endl;
+}
+
+void Processor::buildKBContours() {
+    knownContours.push_back(Contour("circle",    ":/resource/circle.png"));
+    knownContours.push_back(Contour("cross",     ":/resource/cross.png"));
+    knownContours.push_back(Contour("triangle",  ":/resource/triangle.png"));
+    knownContours.push_back(Contour("triangle",  ":/resource/triangle_rounded.png"));
+
+    // niektóre trójkąty są zaokrąglone, a niektóre ostre
+    // dlatego potrzeba dwa wzorce
 }
 
 const Mat& Processor::getDebug() const {

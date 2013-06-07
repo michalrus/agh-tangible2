@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include <opencv2/highgui/highgui_c.h>
+//#include <opencv2/highgui/highgui_c.h>
 
 using namespace cv;
 
@@ -82,13 +82,20 @@ void MainWindow::timerEvent(QTimerEvent *) {
     if (!capture.isOpened())
         return;
 
-    capture >> frame;
-
-    if (!fromCamera && frame.empty()) { // if it's the last frame, loop
-        capture.set(CV_CAP_PROP_POS_FRAMES, 0);
-        capture >> frame;
-        if (frame.empty())
+    if (!fromCamera) {
+        if (capture.get(CV_CAP_PROP_POS_FRAMES) >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
+            // if a last frame of a video file
+            capture.set(CV_CAP_PROP_POS_FRAMES, 0);
             return;
+        }
+    }
+
+    try {
+        capture >> frame;
+    } catch (cv::Exception& e) {
+        QMessageBox::warning(this, tr("Tangible2"), tr("Could not capture frame: ") + e.what(), QMessageBox::Ok);
+        toggleFromCamera(true);
+        return;
     }
 
     Gesture gest = processor.process(frame);

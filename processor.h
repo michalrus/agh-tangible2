@@ -3,6 +3,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "contour.h"
+#include "marker.h"
+
 /**
  * @brief Enum, który zwraca metoda Processor::process.
  * Mówi o tym, który gest został wykonany przez użytkownika.
@@ -48,16 +51,20 @@ private:
     cv::Mat binarize(const cv::Mat& frame);
 
     /**
-     * @brief calibrate dokonuje kalibracji na podanej ramce
-     * @param frame ramka używana do kalibracji
+     * @brief calibrate dokonuje kalibracji na rozpoznanych Marker-ach
      */
-    void calibrate(const cv::Mat& frame);
+    void calibrate();
 
     /**
      * @brief findMarkers odszukuje markery na zbinaryzowanym obrazku
      * @param binary ramka zbinaryzowanego obrazu
      */
     void findMarkers(const cv::Mat& binary);
+
+    /**
+     * @brief buildContours buduje wiedzę (wczytuje wzory kształtów)
+     */
+    void buildKBContours();
 
     /**
      * @brief calibrating mówi czy w następnej ramce kalibrujemy
@@ -83,6 +90,21 @@ private:
      * @brief prevCols szerokość poprzedniej ramki (do odpowiedniego zmieniania strel)
      */
     int prevCols;
+
+    /**
+     * @brief frameArea pole powierzchni ramki
+     */
+    int frameArea;
+
+    /**
+     * @brief knownContours baza wiedzy (kontury kształty, które umiemy rozpoznać)
+     */
+    std::vector<Contour> knownContours;
+
+    /**
+     * @brief markers markery rozpoznane na obrazku
+     */
+    std::vector<Marker> markers;
 };
 
 #endif // PROCESSOR_H

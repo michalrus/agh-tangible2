@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/resource">
         <file>icon.png</file>
+        <file>circle.png</file>
+        <file>cross.png</file>
+        <file>triangle.png</file>
+        <file>triangle_rounded.png</file>
     </qresource>
 </RCC>
