@@ -28,6 +28,10 @@ void Marker::drawOn(cv::Mat &canvas) {
     putText(canvas, name, Point(gravityCenter.x + 6, gravityCenter.y + 3), FONT_HERSHEY_COMPLEX_SMALL, 1.0, color, 1, CV_AA);
 }
 
+cv::Point Marker::getCenter() const {
+    return gravityCenter;
+}
+
 Scalar Marker::getColor() const {
     // important: colors are BGR, not RGB!
 

@@ -42,6 +42,7 @@
    <addaction name="actionDebug"/>
    <addaction name="separator"/>
    <addaction name="actionCalibrate"/>
+   <addaction name="actionReset_calibration"/>
    <addaction name="separator"/>
    <addaction name="actionFrom_cam0"/>
    <addaction name="actionFrom_file"/>
@@ -91,6 +92,11 @@
    </property>
    <property name="toolTip">
     <string>From camera(0)</string>
+   </property>
+  </action>
+  <action name="actionReset_calibration">
+   <property name="text">
+    <string>Reset calibration</string>
    </property>
   </action>
  </widget>

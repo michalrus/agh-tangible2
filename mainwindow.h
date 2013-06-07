@@ -57,6 +57,7 @@ private slots:
     void on_actionDebug_toggled(bool);
     void on_actionFrom_file_toggled(bool);
     void on_actionFrom_cam0_toggled(bool);
+    void on_actionReset_calibration_triggered();
 };
 
 #endif // MAINWINDOW_H

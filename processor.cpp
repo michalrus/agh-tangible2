@@ -1,6 +1,9 @@
 #include "processor.h"
 
 #include <QImage>
+#include <QMessageBox>
+#include <QApplication>
+#include <QDesktopWidget>
 
 //#include <opencv2/imgproc.hpp>
 //#include <opencv2/imgproc/types_c.h>
@@ -9,12 +12,21 @@ using namespace cv;
 
 Processor::Processor()
     : calibrating(false),
+      resetting(false),
       prevCols(0)
 {
     buildKBContours();
 }
 
 Gesture Processor::process(const Mat& frame) {
+    if (resetting) {
+        // jeśli user zażyczył sobie resetu macierzy kalibracji
+
+        //...
+
+        resetting = false;
+    }
+
     markers.clear();
     frameArea = frame.cols * frame.rows;
 
@@ -98,17 +110,19 @@ Mat Processor::binarize(const Mat& frame) {
 }
 
 void Processor::calibrate() {
-    // przeprowadź kalibrację używając:
-    //
-    // vector<Marker> this->markers
-    //
+    // 1. sprawdźmy, czy mamy tylko i wyłącznie 4 markery
 
-    // oczywiście tutaj też możemy rysowaś sobie na debug
-    // (ale pewnie nie będzie go widać przez tę jedną ramkę)
+    if (markers.size() != 4) {
+        QMessageBox::warning(qApp->desktop()->screen(), QObject::tr("Tangible2"), QObject::tr("Calibration requires exactly 4 markers in the corners of the table."), QMessageBox::Ok);
+        return;
+    }
 
-    // a z drugiej strony nikt nie każe w process()
-    // wyłączać kalibracji po jednej ramce (linijka "calibrating = false;")
-    // można wyłączyć np. dopiero po 50 (czyli jakieś 1.5 sekundy)
+    // 2. zapiszmy ich pozycje:
+
+    Point a = markers[0].getCenter();
+    Point b = markers[1].getCenter();
+    Point c = markers[2].getCenter();
+    Point d = markers[3].getCenter();
 }
 
 void Processor::findMarkers(const Mat& binary) {
@@ -201,4 +215,8 @@ const Mat& Processor::getDebug() const {
 
 void Processor::doCalibrate() {
     calibrating = true;
+}
+
+void Processor::doReset() {
+    resetting = true;
 }

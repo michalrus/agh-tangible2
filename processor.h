@@ -42,6 +42,11 @@ public:
      */
     void doCalibrate();
 
+    /**
+     * @brief doReset jest wywoływane przez GIU, gdy w następnej ramce ma zostać zresetowana macierz kalibracji. (Czyli jak gdyby kalibracja nigdy nie została przeprowadzona).
+     */
+    void doReset();
+
 private:
     /**
      * @brief binarize przeprowadza binaryzację ramki (pod kątem zostawienia tylko markerów)
@@ -70,6 +75,11 @@ private:
      * @brief calibrating mówi czy w następnej ramce kalibrujemy
      */
     bool calibrating;
+
+    /**
+     * @brief resetting mówi czy w następnej ramce resetujemy kalibrację.
+     */
+    bool resetting;
 
     /**
      * @brief debug macierz z obrazkiem wyświetlanym jako debug w GUI

@@ -14,6 +14,8 @@ public:
      */
     void drawOn(cv::Mat& canvas);
 
+    cv::Point getCenter() const;
+
 private:
     /**
      * @brief getColor kolor w zależności od nazwy kształtu

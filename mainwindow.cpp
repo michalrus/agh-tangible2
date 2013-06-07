@@ -208,3 +208,8 @@ void MainWindow::toggleFromCamera(bool set) {
     ui->actionFrom_file->setChecked(/*capture.isOpened() &&*/ !fromCamera);
     ui->actionFrom_cam0->setChecked(capture.isOpened() && fromCamera);
 }
+
+void MainWindow::on_actionReset_calibration_triggered()
+{
+    processor.doReset();
+}
