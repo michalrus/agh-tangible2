@@ -12,41 +12,43 @@ using namespace cv;
 
 Processor::Processor()
     : calibrating(false),
-      resetting(false),
+      warping(false),
       prevCols(0)
 {
     buildKBContours();
 }
 
 Gesture Processor::process(const Mat& frame) {
-    if (resetting) {
-        // jeśli user zażyczył sobie resetu macierzy kalibracji
-
-        //...
-
-        resetting = false;
-    }
-
+    // 1. inicjalizacja
     markers.clear();
+    frameCenter = Point(0.5 * frame.cols, 0.5 * frame.rows);
     frameArea = frame.cols * frame.rows;
-
-    // 0. binaryzacja (potrzebna i do działania, i do kalibracji
-    Mat binary = binarize(frame);
-
-    // 1. znajdź markery (potrzebne i do działania, i do kalibracji
-    findMarkers(binary);
 
     // 2. wyświetl kopię ramki w zakładce Debug
     // ważne: musimy skopiować dane do this->debug, ponieważ
     // po wyjściu z tej funkcji wszystkie jej lokalne macierze
     // zostaną (teoretycznie) zwolnione
     // (a do frame nie możemy pisać)
+    // od tej pory działamy tylko na debug
     frame.copyTo(debug);
 
-    // 2.a. narysuj markery na debug
+    // 3. jeśli user dokonał już kalibracji, transformuj każdą klatkę
+    if (warping) {
+        // zmień perspektywę
+        warpPerspective(debug, debug, warpPerspectiveTransformMatrix, debug.size());
+    }
+
+    // 4. binaryzacja (potrzebna i do działania, i do kalibracji
+    Mat binary = binarize(debug);
+
+    // 5. znajdź markery (potrzebne i do działania, i do kalibracji
+    findMarkers(binary);
+
+    // 6. narysuj markery na debug
     for (size_t i = 0; i < markers.size(); i++)
         markers[i].drawOn(debug);
 
+    // 7. sprawdź co dalej: kalibracja/gesty
     if (calibrating) {
         // jeśli kalibrujemy w tej ramce:
         calibrate();
@@ -109,20 +111,76 @@ Mat Processor::binarize(const Mat& frame) {
     return binary;
 }
 
+/**
+ * @brief comparePointsClockWise
+ * @param a
+ * @param b
+ * @return true gdy a < b
+ */
+
+/**
+ * @brief ComparePointsClockWise porównuje dwa punkty (który zatacza większy kąt względem środka ramki)
+ */
+struct ComparePointsClockWise : public std::binary_function<Point,Point,bool>
+{
+    Point center;
+    ComparePointsClockWise(const Point& center_) : center(center_) {}
+    inline bool operator()(const Point& a, const Point& b) {
+        double atanA = atan2(a.y - center.y, a.x - center.x);
+        double atanB = atan2(b.y - center.y, b.x - center.x);
+        return (atanA > atanB);
+    }
+};
+
 void Processor::calibrate() {
-    // 1. sprawdźmy, czy mamy tylko i wyłącznie 4 markery
+    using namespace std;
+
+    // 0. sprawdźmy, czy mamy tylko i wyłącznie 4 markery
 
     if (markers.size() != 4) {
         QMessageBox::warning(qApp->desktop()->screen(), QObject::tr("Tangible2"), QObject::tr("Calibration requires exactly 4 markers in the corners of the table."), QMessageBox::Ok);
         return;
     }
 
-    // 2. zapiszmy ich pozycje:
+    // 1. sprawdźmy czy kalibracja nie została już wykonana
 
-    Point a = markers[0].getCenter();
-    Point b = markers[1].getCenter();
-    Point c = markers[2].getCenter();
-    Point d = markers[3].getCenter();
+    if (warping) {
+        QMessageBox::warning(qApp->desktop()->screen(), QObject::tr("Tangible2"), QObject::tr("Calibration already done. Use \"Reset calibration\" first."), QMessageBox::Ok);
+        return;
+    }
+
+    // 2. zapiszmy ich pozycje w wektorze:
+
+    vector<Point> p;
+    for (size_t i = 0; i < markers.size(); i++)
+        p.push_back(markers[i].getCenter());
+
+    // 3. do transformacji potrzebujemy mieć je w porządku zegarowym zaczynając of left-upper
+
+    sort(p.begin(), p.end(), ComparePointsClockWise(frameCenter));
+
+    // 4. w których punktach chcemy mieć obecne rogi zaznaczone markerami
+
+    // margines dookoła ramki: 5% jej szerokości
+    int w = frameCenter.x * 2;
+    int h = frameCenter.y * 2;
+    int margin = 0.05 * w;
+
+    cv::Point2f dest_points[4];
+    dest_points[0] = Point(margin, h - margin);
+    dest_points[1] = Point(w - margin, h - margin);
+    dest_points[2] = Point(w - margin, margin);
+    dest_points[3] = Point(margin, margin);
+
+    cv::Point2f src_points[4];
+    src_points[0] = p[0];
+    src_points[1] = p[1];
+    src_points[2] = p[2];
+    src_points[3] = p[3];
+
+    warpPerspectiveTransformMatrix = getPerspectiveTransform(src_points, dest_points);
+
+    warping = true;
 }
 
 void Processor::findMarkers(const Mat& binary) {
@@ -185,10 +243,6 @@ void Processor::findMarkers(const Mat& binary) {
         }
         markers.push_back(Marker(name, contours[idx]));
     }
-
-//    std::cout << std::endl << "-- new frame" << std::endl;
-//    for (int i = 0; i < recognizedShapes.size(); i++)
-//        std::cout << i << " is a " << recognizedShapes[i] << std::endl;
 }
 
 void Processor::buildKBContours() {
@@ -218,5 +272,5 @@ void Processor::doCalibrate() {
 }
 
 void Processor::doReset() {
-    resetting = true;
+    warping = false;
 }

@@ -77,9 +77,14 @@ private:
     bool calibrating;
 
     /**
-     * @brief resetting mówi czy w następnej ramce resetujemy kalibrację.
+     * @brief warping mówi czy na wszystkich ramkach robimy warpPerspective().
      */
-    bool resetting;
+    bool warping;
+
+    /**
+     * @brief warpPerspectiveTransformMatrix macierz trasformacji warpPerspective()
+     */
+    cv::Mat warpPerspectiveTransformMatrix;
 
     /**
      * @brief debug macierz z obrazkiem wyświetlanym jako debug w GUI
@@ -105,6 +110,11 @@ private:
      * @brief frameArea pole powierzchni ramki
      */
     int frameArea;
+
+    /**
+     * @brief frameCenter punkt na środku ramki (potrzebny do sortowania punktów w kalibracji)
+     */
+    cv::Point frameCenter;
 
     /**
      * @brief knownContours baza wiedzy (kontury kształty, które umiemy rozpoznać)
