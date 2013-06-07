@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     processor.cpp \
     contour.cpp \
     marker.cpp \
-    gesturedetector.cpp
+    gesturedetector.cpp \
+    systemcontrol.cpp
 
 HEADERS  += mainwindow.h \
     processor.h \
     contour.h \
     marker.h \
-    gesturedetector.h
+    gesturedetector.h \
+    systemcontrol.h
 
 FORMS    += mainwindow.ui
 

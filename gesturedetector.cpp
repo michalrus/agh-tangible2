@@ -8,17 +8,9 @@ GestureDetector::GestureDetector()
 }
 
 void GestureDetector::handle(size_t frameNumber, std::string type, double x, double y) {
-    std::cout << frameNumber << ": " << type << " @ (" << x << "," << y << ")" << std::endl;
-}
+    if (type == "e.triangle") {
+        systemControl.setMouseXY(x, y);
+    }
 
-void GestureDetector::back() {
-    qDebug() << "Gesture: back()";
-
-    // do sth
-}
-
-void GestureDetector::forward() {
-    qDebug() << "Gesture: forward()";
-
-    // do sth
+    //std::cout << frameNumber << ": " << type << " @ (" << x << "," << y << ")" << std::endl;
 }

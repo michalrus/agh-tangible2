@@ -2,6 +2,7 @@
 #define GESTUREDETECTOR_H
 
 #include <string>
+#include <systemcontrol.h>
 
 class GestureDetector
 {
@@ -18,9 +19,10 @@ public:
     void handle(size_t frameNumber, std::string type, double x, double y);
 
 private:
-
-    void back();
-    void forward();
+    /**
+     * @brief ctl do wysyłania komend systemowych (strzałki, klawisze, myszka, etc.)
+     */
+    SystemControl systemControl;
 };
 
 #endif // GESTUREDETECTOR_H
