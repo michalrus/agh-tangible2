@@ -185,6 +185,13 @@ void Processor::buildKBContours() {
 
     // niektóre trójkąty są zaokrąglone, a niektóre ostre
     // dlatego potrzeba dwa wzorce
+
+    // niestety jak dodamy prostokąt, to przy niedoświetleniu
+    // czasem myli koło z prostokątem... prostokąty były używane
+    // tylko do kalibracji, a do niej przecież wystarczą dowolne
+    // 4 markery, więc to poniżej jest wyłączone
+
+    //knownContours.push_back(Contour("rectangle", ":/resource/rectangle.png"));
 }
 
 const Mat& Processor::getDebug() const {

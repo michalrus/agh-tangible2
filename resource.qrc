@@ -5,5 +5,6 @@
         <file>cross.png</file>
         <file>triangle.png</file>
         <file>triangle_rounded.png</file>
+        <file>rectangle.png</file>
     </qresource>
 </RCC>

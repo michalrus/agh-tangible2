@@ -46,6 +46,12 @@ Scalar Marker::getColor() const {
     if (name == "e.triangle")
         return Scalar(255, 0, 0); // blue
 
+    if (name == "rectangle")
+        return Scalar(255, 0, 255); // magenta
+
+    if (name == "e.rectangle")
+        return Scalar(128, 0, 128); // purple
+
     // domyślnie biały
     return Scalar(255, 255, 255);
 }
