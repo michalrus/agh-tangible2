@@ -3,18 +3,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "gesturedetector.h"
 #include "contour.h"
 #include "marker.h"
-
-/**
- * @brief Enum, który zwraca metoda Processor::process.
- * Mówi o tym, który gest został wykonany przez użytkownika.
- */
-enum Gesture {
-    GNone,
-    GBack,
-    GForward
-};
 
 /**
  * @brief Klasa, która zajmuje się przetwarzaniem (rozumieniem) kolejnych ramek.
@@ -25,11 +16,10 @@ public:
     Processor();
 
     /**
-     * @brief process stara się zrozumieć kolejne ramki z kamery.
+     * @brief process wykrywa markery na kolejnych ramkach z kamery.
      * @param frame Ramka obrazu z kamery. Wewnętrzny format OpenCV.
-     * @return Zwraca gest użytkownika, jeśli wykryty. Jeśli nie: Gesture.None.
      */
-    Gesture process(const cv::Mat& frame);
+    void process(const cv::Mat& frame);
 
     /**
      * @brief getDebug
@@ -70,6 +60,11 @@ private:
      * @brief buildContours buduje wiedzę (wczytuje wzory kształtów)
      */
     void buildKBContours();
+
+    /**
+     * @brief gestureDetector obsługuje już rozpoznane pozycje+typy markerów
+     */
+    GestureDetector gestureDetector;
 
     /**
      * @brief calibrating mówi czy w następnej ramce kalibrujemy

@@ -18,7 +18,7 @@ Processor::Processor()
     buildKBContours();
 }
 
-Gesture Processor::process(const Mat& frame) {
+void Processor::process(const Mat& frame) {
     // 1. inicjalizacja
     markers.clear();
     frameCenter = Point(0.5 * frame.cols, 0.5 * frame.rows);
@@ -55,17 +55,15 @@ Gesture Processor::process(const Mat& frame) {
 
         // następna ramka już nie będzie kalibracyjną
         calibrating = false;
-
-        // jeśli kalibrujemy, to żadnego gestu nie ma
-        return GNone;
     }
     else {
         // jeśli jednak nie kalibrujemy (czyli normalne wywołanie):
 
-        // ... rozpoznaj gest z pozycji i klas wykrytych markerów
-
-        // 3. zwróć wykryty gest albo GNone (jeśli żaden1)
-        return GNone;
+        // rozpoznaj gest z pozycji i klas wykrytych markerów
+        for (size_t i = 0; i < markers.size(); i++) {
+            Point pos = markers[i].getCenterOnFrame();
+            gestureDetector.handle(markers[i].getName(), (double)pos.x / frame.cols, (double)pos.y / frame.rows);
+        }
     }
 }
 
@@ -153,7 +151,7 @@ void Processor::calibrate() {
 
     vector<Point> p;
     for (size_t i = 0; i < markers.size(); i++)
-        p.push_back(markers[i].getCenter());
+        p.push_back(markers[i].getCenterOnFrame());
 
     // 3. do transformacji potrzebujemy mieć je w porządku zegarowym zaczynając of left-upper
 

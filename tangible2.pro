@@ -15,15 +15,15 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     processor.cpp \
-    gesturehandler.cpp \
     contour.cpp \
-    marker.cpp
+    marker.cpp \
+    gesturedetector.cpp
 
 HEADERS  += mainwindow.h \
     processor.h \
-    gesturehandler.h \
     contour.h \
-    marker.h
+    marker.h \
+    gesturedetector.h
 
 FORMS    += mainwindow.ui
 

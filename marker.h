@@ -14,7 +14,9 @@ public:
      */
     void drawOn(cv::Mat& canvas);
 
-    cv::Point getCenter() const;
+    cv::Point getCenterOnFrame() const;
+
+    std::string getName() const;
 
 private:
     /**

@@ -8,7 +8,6 @@
 #include <opencv2/opencv.hpp>
 
 #include "processor.h"
-#include "gesturehandler.h"
 
 namespace Ui {
 class MainWindow;
@@ -45,7 +44,6 @@ private:
     bool fromCamera;
     QString videoFile;
     Processor processor;
-    GestureHandler gestureHandler;
 
     void toggleCamera(bool);
     void toggleFromCamera(bool);

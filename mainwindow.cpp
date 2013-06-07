@@ -6,8 +6,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-//#include <opencv2/highgui/highgui_c.h>
-
 using namespace cv;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -98,8 +96,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
         return;
     }
 
-    Gesture gest = processor.process(frame);
-    gestureHandler.handle(gest);
+    processor.process(frame);
 
     const Mat &show = (ui->actionDebug->isChecked() ? processor.getDebug() : frame);
 
