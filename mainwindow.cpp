@@ -33,31 +33,22 @@ MainWindow::MainWindow(QWidget *parent) :
     toggleFromCamera(true);
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-    delete trayIcon;
-    delete trayMenu;
-    delete open;
-    delete quit;
-}
-
 void MainWindow::createActions() {
-    open = new QAction(tr("&Open"), this);
+    open = new QAction(tr("&Open"), this); // deleted automatically by Qt
     connect(open, SIGNAL(triggered()), this, SLOT(show()));
 
-    quit = new QAction(tr("&Quit"), this);
+    quit = new QAction(tr("&Quit"), this); // deleted automatically by Qt
     connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 }
 
 void MainWindow::createTrayIcon() {
-    trayMenu = new QMenu(this);
+    trayMenu = new QMenu(this); // deleted automatically by Qt
 
     trayMenu->addAction(open);
     trayMenu->addSeparator();
     trayMenu->addAction(quit);
 
-    trayIcon = new QSystemTrayIcon(this);
+    trayIcon = new QSystemTrayIcon(this); // deleted automatically by Qt
     trayIcon->setContextMenu(trayMenu);
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(on_trayIcon_clicked(QSystemTrayIcon::ActivationReason)));

@@ -1,8 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <memory>
 
+#include <QMainWindow>
 #include <QSystemTrayIcon>
 
 #include <opencv2/opencv.hpp>
@@ -19,7 +20,6 @@ class MainWindow : public QMainWindow
     
 public:
     explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
 
 protected:
     void timerEvent(QTimerEvent*);
@@ -29,10 +29,9 @@ private:
     void createTrayIcon();
     void setIcon();
     void closeEvent(QCloseEvent *);
-    QPixmap toPixmap(IplImage *cvimage);
     QImage mat2QImage(const cv::Mat& src);
 
-    Ui::MainWindow *ui;
+    std::auto_ptr<Ui::MainWindow> ui;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayMenu;
