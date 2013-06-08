@@ -2,7 +2,8 @@
 #define GESTUREDETECTOR_H
 
 #include <string>
-#include <systemcontrol.h>
+
+#include "systemcontrol.h"
 
 class GestureDetector
 {

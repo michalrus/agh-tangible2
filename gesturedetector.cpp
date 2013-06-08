@@ -8,9 +8,8 @@ GestureDetector::GestureDetector()
 }
 
 void GestureDetector::handle(size_t frameNumber, std::string type, double x, double y) {
-    if (type == "e.triangle") {
-        systemControl.setMouseXY(x, y);
-    }
+    QString window = systemControl.getCurrentWindowTitle();
 
-    //std::cout << frameNumber << ": " << type << " @ (" << x << "," << y << ")" << std::endl;
+    if (0 && type == "e.triangle")
+        return systemControl.sendMouseXY(x, y);
 }
