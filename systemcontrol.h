@@ -20,6 +20,11 @@ public:
     void sendMouseXY(double x, double y);
 
     /**
+     * @brief setMouseXY Left-clicks the mouse.
+     */
+    void sendMouseClick();
+
+    /**
      * @brief sendMouseScroll scrolls using mouse wheel
      * @param velocity of scrolling, range: [-1;1] (positive means up)
      */

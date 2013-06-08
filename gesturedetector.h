@@ -24,6 +24,11 @@ private:
      * @brief ctl do wysyłania komend systemowych (strzałki, klawisze, myszka, etc.)
      */
     SystemControl systemControl;
+
+    /**
+     * @brief lastClickFrame numer ramki w której ostatnio klikaliśmy
+     */
+    size_t lastClickFrame;
 };
 
 #endif // GESTUREDETECTOR_H

@@ -4,7 +4,6 @@
 #include <iostream>
 
 #if defined(Q_OS_WIN)
-#   define WINVER 0x0500
 #   include <windows.h>
 #else
 #   error Unknown operating system, no specific SystemControl available.
@@ -16,7 +15,7 @@ QString SystemControl::getCurrentWindowTitle() const {
     if (foreground) {
         wchar_t title[1024];
         int n = GetWindowText(foreground, title, sizeof(title) / sizeof(wchar_t));
-        return QString::fromStdWString(title);
+        return QString::fromWCharArray(title, n);
     }
     return QString();
 #endif
@@ -31,7 +30,25 @@ void SystemControl::sendMouseXY(double x, double y) {
     ip.mi.mouseData = 0;
     ip.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
     ip.mi.time = 0;
-    ip.mi.dwExtraInfo = NULL;
+    ip.mi.dwExtraInfo = 0;
+    SendInput(1, &ip, sizeof(INPUT));
+#endif
+}
+
+void SystemControl::sendMouseClick() {
+#if defined Q_OS_WIN
+    INPUT ip;
+    ip.type = INPUT_MOUSE;
+    ip.mi.dx = 0;
+    ip.mi.dy = 0;
+    ip.mi.mouseData = 0;
+    // press
+    ip.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+    ip.mi.time = 0;
+    ip.mi.dwExtraInfo = 0;
+    SendInput(1, &ip, sizeof(INPUT));
+    // release
+    ip.mi.dwFlags = MOUSEEVENTF_LEFTUP;
     SendInput(1, &ip, sizeof(INPUT));
 #endif
 }
@@ -45,7 +62,7 @@ void SystemControl::sendMouseScroll(double velocity) {
     ip.mi.mouseData = 120 * velocity;
     ip.mi.dwFlags = MOUSEEVENTF_WHEEL;
     ip.mi.time = 0;
-    ip.mi.dwExtraInfo = NULL;
+    ip.mi.dwExtraInfo = 0;
     SendInput(1, &ip, sizeof(INPUT));
 #endif
 }
