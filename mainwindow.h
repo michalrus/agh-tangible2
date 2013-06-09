@@ -23,6 +23,7 @@ public:
 
 protected:
     void timerEvent(QTimerEvent*);
+    bool nativeEvent(const QByteArray& eventType, void* message, long* result);
     
 private:
     void createActions();
@@ -55,6 +56,7 @@ private slots:
     void on_actionFrom_file_toggled(bool);
     void on_actionFrom_cam0_toggled(bool);
     void on_actionReset_calibration_triggered();
+    void on_actionControl_system_toggled(bool);
 };
 
 #endif // MAINWINDOW_H

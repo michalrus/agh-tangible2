@@ -18,8 +18,9 @@ public:
     /**
      * @brief process wykrywa markery na kolejnych ramkach z kamery.
      * @param frame Ramka obrazu z kamery. Wewnętrzny format OpenCV.
+     * @param control Mówi o tym, czy chcemy aktualnie kontrolować system.
      */
-    void process(const cv::Mat& frame);
+    void process(const cv::Mat& frame, bool control);
 
     /**
      * @brief getDebug

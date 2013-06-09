@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>551</width>
     <height>300</height>
    </rect>
   </property>
@@ -46,6 +46,8 @@
    <addaction name="separator"/>
    <addaction name="actionFrom_cam0"/>
    <addaction name="actionFrom_file"/>
+   <addaction name="separator"/>
+   <addaction name="actionControl_system"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionCamera">
@@ -97,6 +99,14 @@
   <action name="actionReset_calibration">
    <property name="text">
     <string>Reset calibration</string>
+   </property>
+  </action>
+  <action name="actionControl_system">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Control system (F9)</string>
    </property>
   </action>
  </widget>

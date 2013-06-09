@@ -2,9 +2,16 @@
 #include "ui_mainwindow.h"
 
 #include <QMenu>
+#include <QDebug>
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
+
+#if defined(Q_OS_WIN)
+#   include <windows.h>
+#else
+#   error Unknown operating system, no specific SystemControl available.
+#endif
 
 using namespace cv;
 
@@ -31,6 +38,13 @@ MainWindow::MainWindow(QWidget *parent) :
     trayIcon->show();
 
     toggleFromCamera(true);
+
+    // register systemControl system-wide hotkey: F9
+#if defined(Q_OS_WIN)
+    BOOL rv = RegisterHotKey(reinterpret_cast<HWND>(winId()), 0, 0x4000, VK_F9); // 0x4000 = MOD_NOREPEAT on Win7+
+    if (!rv)
+        qWarning() << "could not register F9 hotkey";
+#endif
 }
 
 void MainWindow::createActions() {
@@ -87,11 +101,24 @@ void MainWindow::timerEvent(QTimerEvent *) {
         return;
     }
 
-    processor.process(frame);
+    processor.process(frame, ui->actionControl_system->isChecked());
 
     const Mat &show = (ui->actionDebug->isChecked() ? processor.getDebug() : frame);
 
     ui->imageLabel->setPixmap(QPixmap::fromImage(mat2QImage(show)));
+}
+
+bool MainWindow::nativeEvent(const QByteArray& eventType, void* message, long* result) {
+    // process the native message
+    // and if it's a system-wide f9 hotkey...
+#if defined(Q_OS_WIN)
+    MSG* msg = reinterpret_cast<MSG*>(message);
+    if (msg->message == WM_HOTKEY && LOWORD(msg->lParam) == 0 && HIWORD(msg->lParam) == VK_F9) {
+        ui->actionControl_system->toggle();
+        return true; // do not pass it to Qt handler
+    }
+#endif
+    return false;
 }
 
 QImage MainWindow::mat2QImage(const cv::Mat &src) {
@@ -200,4 +227,16 @@ void MainWindow::toggleFromCamera(bool set) {
 void MainWindow::on_actionReset_calibration_triggered()
 {
     processor.doReset();
+}
+
+void MainWindow::on_actionControl_system_toggled(bool set)
+{
+    if (set) {
+        trayIcon->showMessage(tr("Tangible2 takes over!"),
+                              tr("You can now control your system (mouse, keyboard) with the Tangible Table.\n\nHit F9 to stop."));
+    }
+    else {
+        trayIcon->showMessage(tr("Tangible2 gives up control."),
+                              tr("You no longer can control your system with the Tangible Table.\n\nHit F9 to start over."));
+    }
 }

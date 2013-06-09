@@ -7,7 +7,10 @@ GestureDetector::GestureDetector()
 {
 }
 
-void GestureDetector::handle(size_t frameNumber, std::string type, double x, double y) {
+void GestureDetector::handle(bool control, size_t frameNumber, std::string type, double x, double y) {
+    if (!control) // jeśli kontrola jest wyłączona w GUI...
+        return;
+
     QString window = systemControl.getCurrentWindowTitle();
 
     if (type == "e.triangle")
