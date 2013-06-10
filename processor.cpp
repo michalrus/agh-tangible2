@@ -37,7 +37,7 @@ void Processor::process(const Mat& frame, bool control) {
     // 3. jeśli user dokonał już kalibracji, transformuj każdą klatkę
     if (warping) {
         // zmień perspektywę
-        warpPerspective(debug, debug, warpPerspectiveTransformMatrix, debug.size(), INTER_LINEAR, BORDER_CONSTANT, Scalar(255, 255, 255));
+        warpPerspective(debug, debug, warpPerspectiveTransformMatrix, debug.size(), INTER_LINEAR, BORDER_REPLICATE);
     }
 
     // 4. binaryzacja (potrzebna i do działania, i do kalibracji
