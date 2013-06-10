@@ -31,12 +31,13 @@ void Processor::process(const Mat& frame, bool control) {
     // zostaną (teoretycznie) zwolnione
     // (a do frame nie możemy pisać)
     // od tej pory działamy tylko na debug
-    frame.copyTo(debug);
+    //frame.copyTo(debug);
+    cv::flip(frame, debug, 1);
 
     // 3. jeśli user dokonał już kalibracji, transformuj każdą klatkę
     if (warping) {
         // zmień perspektywę
-        warpPerspective(debug, debug, warpPerspectiveTransformMatrix, debug.size());
+        warpPerspective(debug, debug, warpPerspectiveTransformMatrix, debug.size(), INTER_LINEAR, BORDER_CONSTANT, Scalar(255, 255, 255));
     }
 
     // 4. binaryzacja (potrzebna i do działania, i do kalibracji
@@ -96,7 +97,7 @@ Mat Processor::binarize(const Mat& frame) {
     cvtColor(frame, binary, CV_BGR2GRAY);
 
     // rozmiar bloku do adaptywnej binaryzacji jako 10% szerokości ramki
-    int blockSize = 0.10 * frame.cols;
+    int blockSize = 0.15 * frame.cols;
     if (blockSize % 2 == 0)
         blockSize++; // rozmiar bloku musi być nieparzysty
 
