@@ -240,7 +240,7 @@ void Processor::findMarkers(const Mat& binary) {
             // sprawdź czy pole dziecka nie jest za małe w stosunku
             // do rodzica (czy to nie śmieć)
             double holeArea = contourArea(contours[hierarchy[idx][2]]);
-            if (holeArea > 0.25 * area)
+            if (holeArea > 0.05 * area)
                 name = "e." + name;
         }
         markers.push_back(Marker(name, contours[idx]));
