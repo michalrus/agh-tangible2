@@ -49,13 +49,20 @@ private:
     /**
      * @brief calibrate dokonuje kalibracji na rozpoznanych Marker-ach
      */
-    void calibrate();
+    void calibrate(const std::vector<Marker>& markers);
 
     /**
      * @brief findMarkers odszukuje markery na zbinaryzowanym obrazku
      * @param binary ramka zbinaryzowanego obrazu
      */
-    void findMarkers(const cv::Mat& binary);
+    std::vector<Marker> findMarkers(const cv::Mat& binary);
+
+    /**
+     * @brief drawMarker rysuje marker na danym obrazku
+     * @param dest obrazek docelowy
+     * @param marker marker
+     */
+    void drawMarker(cv::Mat& dest, const Marker& marker);
 
     /**
      * @brief buildContours buduje wiedzę (wczytuje wzory kształtów)
@@ -113,19 +120,9 @@ private:
     cv::Point frameCenter;
 
     /**
-     * @brief framesPassed liczba klatek, które upłynęły od początku działania programu
-     */
-    size_t framesPassed;
-
-    /**
      * @brief knownContours baza wiedzy (kontury kształty, które umiemy rozpoznać)
      */
     std::vector<Contour> knownContours;
-
-    /**
-     * @brief markers markery rozpoznane na obrazku
-     */
-    std::vector<Marker> markers;
 };
 
 #endif // PROCESSOR_H

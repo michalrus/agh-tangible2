@@ -16,7 +16,6 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     processor.cpp \
     contour.cpp \
-    marker.cpp \
     gesturedetector.cpp \
     systemcontrol.cpp
 

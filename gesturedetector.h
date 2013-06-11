@@ -2,6 +2,8 @@
 #define GESTUREDETECTOR_H
 
 #include <string>
+#include <vector>
+#include <marker.h>
 
 #include "systemcontrol.h"
 
@@ -18,9 +20,16 @@ public:
      * @param x Relatywna pozycja w szerokości stolika, zakres: [0;1]
      * @param y Relatywna pozycja w wysokości stolika, zakres: [0;1]
      */
-    void handle(bool control, size_t frameNumber, std::string type, double x, double y);
+    void handle(bool control, const std::vector<Marker>& frame);
+
+    const std::vector<Marker>& getMarkers() const;
 
 private:
+    /**
+     * @brief markers "lepsze" markery -- biorąc pod uwagę kilka ostatnich klatek (większa bezwładność)
+     */
+    std::vector<Marker> markers;
+
     /**
      * @brief ctl do wysyłania komend systemowych (strzałki, klawisze, myszka, etc.)
      */

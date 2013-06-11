@@ -7,13 +7,18 @@ GestureDetector::GestureDetector()
 {
 }
 
-void GestureDetector::handle(bool control, size_t frameNumber, std::string type, double x, double y) {
+void GestureDetector::handle(bool control, const std::vector<Marker>& frame) {
+    // tymczasowo
+    markers.clear();
+    markers = frame;
+    return;
+
     if (!control) // jeśli kontrola jest wyłączona w GUI...
         return;
 
     QString window = systemControl.getCurrentWindowTitle();
 
-    if (type == "e.triangle")
+/*    if (type == "e.triangle")
         return systemControl.sendMouseXY(x, y);
 
     if (type == "triangle" && frameNumber - lastClickFrame > 20) {
@@ -28,5 +33,9 @@ void GestureDetector::handle(bool control, size_t frameNumber, std::string type,
         // jeśli to Google Chrome, to możemy użyć pozycji kółka w pionie do scrollowania
         double vel = -0.3 * (y * 2.0 - 1.0); // przeskaluj [0;1] na 0.3*[1;-1]
         return systemControl.sendMouseScroll(vel);
-    }
+    }*/
+}
+
+const std::vector<Marker>& GestureDetector::getMarkers() const {
+    return markers;
 }

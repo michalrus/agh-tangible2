@@ -13,15 +13,15 @@ using namespace cv;
 Processor::Processor()
     : calibrating(false),
       warping(false),
-      prevCols(0),
-      framesPassed(0)
+      prevCols(0)
 {
     buildKBContours();
 }
 
 void Processor::process(const Mat& frame, bool control) {
+    using std::vector;
+
     // 1. inicjalizacja
-    markers.clear();
     frameCenter = Point(0.5 * frame.cols, 0.5 * frame.rows);
     frameArea = frame.cols * frame.rows;
 
@@ -43,31 +43,26 @@ void Processor::process(const Mat& frame, bool control) {
     // 4. binaryzacja (potrzebna i do działania, i do kalibracji
     Mat binary = binarize(debug);
 
-    // 5. znajdź markery (potrzebne i do działania, i do kalibracji
-    findMarkers(binary);
+    // 5. znajdź markery tej konkretnej ramki
+    vector<Marker> markers = findMarkers(binary);
 
-    // 6. narysuj markery na debug
-    for (size_t i = 0; i < markers.size(); i++)
-        markers[i].drawOn(debug);
+    // 6. każ mózgowi operacji porównać je z poprzednimi stanami
+    //    -- lepsze śledzenie -- a oprócz tego ew zareagować na
+    //    rozpoznane gesty
+    gestureDetector.handle(control, markers);
 
-    // 7. sprawdź co dalej: kalibracja/gesty
+    // 6. narysuj te lepsze markery na debug
+    const vector<Marker>& betterMarkers = gestureDetector.getMarkers();
+    for (size_t i = 0; i < betterMarkers.size(); i++)
+        drawMarker(debug, betterMarkers[i]);
+
+    // 7. sprawdź czy aby nie trzeba policzyć macierzy kalibracji
     if (calibrating) {
         // jeśli kalibrujemy w tej ramce:
-        calibrate();
+        calibrate(betterMarkers);
 
         // następna ramka już nie będzie kalibracyjną
         calibrating = false;
-    }
-    else {
-        // jeśli jednak nie kalibrujemy (czyli normalne wywołanie):
-
-        // rozpoznaj gest z pozycji i klas wykrytych markerów
-        for (size_t i = 0; i < markers.size(); i++) {
-            Point pos = markers[i].getCenterOnFrame();
-            gestureDetector.handle(control, framesPassed, markers[i].getName(), (double)pos.x / frame.cols, (double)pos.y / frame.rows);
-        }
-
-        framesPassed++;
     }
 }
 
@@ -134,7 +129,7 @@ struct ComparePointsClockWise : public std::binary_function<Point,Point,bool>
     }
 };
 
-void Processor::calibrate() {
+void Processor::calibrate(const std::vector<Marker>& markers) {
     using namespace std;
 
     // 0. sprawdźmy, czy mamy tylko i wyłącznie 4 markery
@@ -155,7 +150,7 @@ void Processor::calibrate() {
 
     vector<Point> p;
     for (size_t i = 0; i < markers.size(); i++)
-        p.push_back(markers[i].getCenterOnFrame());
+        p.push_back(Point(markers[i].x, markers[i].y));
 
     // 3. do transformacji potrzebujemy mieć je w porządku zegarowym zaczynając of left-upper
 
@@ -185,15 +180,12 @@ void Processor::calibrate() {
     warping = true;
 }
 
-void Processor::findMarkers(const Mat& binary) {
-    // staraj się wykryć jakieś gesty/położenia markerów
-    // zarówno z tej ramki jak i ew. z danych z poprzednich
-    // obiekt Processor może mieć przecież jakąś pamięć
-    // ale to już jak chcecie
+std::vector<Marker> Processor::findMarkers(const Mat& binary) {
+    using std::vector;
+    vector<Marker> markers;
 
     // 1. znajdź kontury obiektów:
 
-    using std::vector;
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
 
@@ -203,7 +195,7 @@ void Processor::findMarkers(const Mat& binary) {
     drawContours(binary, contours, -1, Scalar(255, 255, 255));
 
     if (!contours.size()) // avoid sigsegv ;)
-        return;
+        return markers;
 
     // 2. compare contours to our knowledge base (each-each)
 
@@ -243,8 +235,59 @@ void Processor::findMarkers(const Mat& binary) {
             if (holeArea > 0.05 * area)
                 name = "e." + name;
         }
-        markers.push_back(Marker(name, contours[idx]));
+
+        // enclosing circle
+        cv::Point2f enclCircleCenter;
+        float enclCircleRadius;
+        minEnclosingCircle(contours[idx], enclCircleCenter, enclCircleRadius);
+
+        // get the center of gravity rather than center of bounding box
+        // (especially important in triangle case)
+        Moments moms = moments(contours[idx]);
+
+        Marker tmp;
+        tmp.name = name;
+        tmp.radius = enclCircleRadius;
+        tmp.x = (moms.m10 / moms.m00) / (frameCenter.x * 2); // get relative (x,y)
+        tmp.y = (moms.m01 / moms.m00) / (frameCenter.y * 2);
+
+        markers.push_back(tmp);
     }
+
+    return markers;
+}
+
+void Processor::drawMarker(cv::Mat& canvas, const Marker& marker) {
+    // important: colors are BGR, not RGB!
+
+    Scalar color(255, 255, 255); // domyślnie biały
+
+    if (marker.name == "cross" || marker.name == "e.cross")
+        color = Scalar(0, 0, 255); // red
+    else if (marker.name == "circle")
+        color = Scalar(0, 255, 255); // yellow
+    else if (marker.name == "e.circle")
+        color = Scalar(0, 255, 0); // green
+    else if (marker.name == "triangle")
+        color = Scalar(255, 255, 0); // cyan
+    else if (marker.name == "e.triangle")
+        color = Scalar(255, 0, 0); // blue
+    else if (marker.name == "rectangle")
+        color = Scalar(255, 0, 255); // magenta
+    else if (marker.name == "e.rectangle")
+        color = Scalar(128, 0, 128); // purple
+
+    double rx = marker.x * frameCenter.x * 2;
+    double ry = marker.y * frameCenter.y * 2;
+
+    // enclosing circle
+    circle(canvas, cv::Point2d(rx, ry), marker.radius, color, 1, CV_AA);
+
+    // center
+    circle(canvas, cv::Point2d(rx, ry), 3, color, CV_FILLED, CV_AA);
+
+    // label
+    putText(canvas, marker.name, Point(rx + 6, ry + 3), FONT_HERSHEY_COMPLEX_SMALL, 1.0, color, 1, CV_AA);
 }
 
 void Processor::buildKBContours() {
