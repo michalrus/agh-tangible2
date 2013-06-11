@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "gesturedetector.h"
-#include "contour.h"
+#include "knowncontour.h"
 #include "marker.h"
 
 /**
@@ -122,7 +122,7 @@ private:
     /**
      * @brief knownContours baza wiedzy (kontury kształty, które umiemy rozpoznać)
      */
-    std::vector<Contour> knownContours;
+    std::vector<KnownContour> knownContours;
 };
 
 #endif // PROCESSOR_H

@@ -15,16 +15,16 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     processor.cpp \
-    contour.cpp \
     gesturedetector.cpp \
-    systemcontrol.cpp
+    systemcontrol.cpp \
+    knowncontour.cpp
 
 HEADERS  += mainwindow.h \
     processor.h \
-    contour.h \
     marker.h \
     gesturedetector.h \
-    systemcontrol.h
+    systemcontrol.h \
+    knowncontour.h
 
 FORMS    += mainwindow.ui
 

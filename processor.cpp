@@ -5,9 +5,6 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
-//#include <opencv2/imgproc.hpp>
-//#include <opencv2/imgproc/types_c.h>
-
 using namespace cv;
 
 Processor::Processor()
@@ -291,10 +288,10 @@ void Processor::drawMarker(cv::Mat& canvas, const Marker& marker) {
 }
 
 void Processor::buildKBContours() {
-    knownContours.push_back(Contour("circle",    ":/resource/circle.png"));
-    knownContours.push_back(Contour("cross",     ":/resource/cross.png"));
-    knownContours.push_back(Contour("triangle",  ":/resource/triangle.png"));
-    knownContours.push_back(Contour("triangle",  ":/resource/triangle_rounded.png"));
+    knownContours.push_back(KnownContour("circle",    ":/resource/circle.png"));
+    knownContours.push_back(KnownContour("cross",     ":/resource/cross.png"));
+    knownContours.push_back(KnownContour("triangle",  ":/resource/triangle.png"));
+    knownContours.push_back(KnownContour("triangle",  ":/resource/triangle_rounded.png"));
 
     // niektóre trójkąty są zaokrąglone, a niektóre ostre
     // dlatego potrzeba dwa wzorce

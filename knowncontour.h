@@ -1,9 +1,9 @@
-#ifndef CONTOUR_H
-#define CONTOUR_H
+#ifndef KNOWNCONTOUR_H
+#define KNOWNCONTOUR_H
 
 #include <opencv2/opencv.hpp>
 
-class Contour
+class KnownContour
 {
 public:
     /**
@@ -11,7 +11,7 @@ public:
      * @param name user-friendly nazwa dla danego kształtu
      * @param resource ścieżka do pliku .png, który zawiera wzór kształtu
      */
-    Contour(std::string name, std::string resource);
+    KnownContour(std::string name, std::string resource);
 
     std::string name;
     std::vector<cv::Point> contour;
@@ -25,4 +25,4 @@ private:
     cv::Mat imageFromResources(const std::string path);
 };
 
-#endif // CONTOUR_H
+#endif // KNOWNCONTOUR_H

@@ -1,4 +1,4 @@
-#include "contour.h"
+#include "knowncontour.h"
 
 #include <QImage>
 #include <QDebug>
@@ -8,7 +8,7 @@
 
 using namespace cv;
 
-Contour::Contour(std::string name_, std::string resource)
+KnownContour::KnownContour(std::string name_, std::string resource)
 {
     name = name_;
 
@@ -29,7 +29,7 @@ Contour::Contour(std::string name_, std::string resource)
     contour = contours[0];
 }
 
-cv::Mat Contour::imageFromResources(const std::string path) {
+cv::Mat KnownContour::imageFromResources(const std::string path) {
     QImage src(path.c_str());
     Mat dst = Mat(src.height(), src.width(), CV_8UC1, Scalar(0));
     for (int y = 0; y < src.height(); y++)
