@@ -42,7 +42,9 @@ private:
     int timerId;
     cv::VideoCapture capture;
     bool fromCamera;
-    QString videoFile;
+    bool fromImage;
+    cv::Mat inputImage;
+    QString inputFile;
     Processor processor;
 
     void toggleCamera(bool);

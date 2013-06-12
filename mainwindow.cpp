@@ -19,7 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     timerId(-1),
-    fromCamera(false)
+    fromCamera(false),
+    fromImage(false)
 {
     // ui
 
@@ -82,23 +83,28 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 void MainWindow::timerEvent(QTimerEvent *) {
     Mat frame;
 
-    if (!capture.isOpened())
-        return;
+    if (!fromCamera && fromImage) {
+        frame = inputImage;
+    }
+    else {
+        if (!capture.isOpened())
+            return;
 
-    if (!fromCamera) {
-        if (capture.get(CV_CAP_PROP_POS_FRAMES) >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
-            // if a last frame of a video file
-            capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+        if (!fromCamera) {
+            if (capture.get(CV_CAP_PROP_POS_FRAMES) >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
+                // if a last frame of a video file
+                capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+                return;
+            }
+        }
+
+        try {
+            capture >> frame;
+        } catch (cv::Exception& e) {
+            QMessageBox::warning(this, tr("Tangible2"), tr("Could not capture frame: ") + e.what(), QMessageBox::Ok);
+            toggleFromCamera(true);
             return;
         }
-    }
-
-    try {
-        capture >> frame;
-    } catch (cv::Exception& e) {
-        QMessageBox::warning(this, tr("Tangible2"), tr("Could not capture frame: ") + e.what(), QMessageBox::Ok);
-        toggleFromCamera(true);
-        return;
     }
 
     processor.process(frame, ui->actionControl_system->isChecked());
@@ -188,27 +194,47 @@ void MainWindow::on_actionFrom_cam0_toggled(bool set)
 void MainWindow::toggleFromCamera(bool set) {
     if (!set) { // if from file
         if (fromCamera) {
-            videoFile = QFileDialog::getOpenFileName(this, tr("Select video file"), "", tr("Video files (*.avi)"));
-            if (!videoFile.isEmpty()) {
+            inputFile = QFileDialog::getOpenFileName(this, tr("Select video file"), "", tr("Video and image files (*.avi *.mp4 *.png *.jpg *.bmp)"));
+            if (!inputFile.isEmpty()) {
                 killTimer(timerId);
 
-                capture.release();
-                capture.open(videoFile.toStdString());
-                if (!capture.isOpened()) {
-                    QMessageBox::warning(this, tr("Tangible2"), tr("Could not open ") + videoFile, QMessageBox::Ok);
+                if (fromCamera || !fromImage)
+                    capture.release();
+
+                fromImage = inputFile.endsWith(".jpg", Qt::CaseInsensitive)
+                        || inputFile.endsWith(".png", Qt::CaseInsensitive)
+                        || inputFile.endsWith(".bmp", Qt::CaseInsensitive);
+
+                if (!fromImage) {
+                    capture.open(inputFile.toStdString());
+                    if (!capture.isOpened()) {
+                        QMessageBox::warning(this, tr("Tangible2"), tr("Could not open ") + inputFile, QMessageBox::Ok);
+                    }
+                    else {
+                        fromCamera = false;
+
+                        double fps = capture.get(CV_CAP_PROP_FPS);
+                        timerId = startTimer(1000.0 / fps);
+                    }
                 }
                 else {
-                    fromCamera = false;
+                    inputImage = imread(inputFile.toStdString());
+                    if (inputImage.data == NULL) {
+                        QMessageBox::warning(this, tr("Tangible2"), tr("Could not open ") + inputFile, QMessageBox::Ok);
+                    }
+                    else {
+                        fromCamera = false;
 
-                    double fps = capture.get(CV_CAP_PROP_FPS);
-                    timerId = startTimer(1000.0 / fps);
+                        timerId = startTimer(1000.0 / 30.0);
+                    }
                 }
             }
         }
     }
     else { // if from cam0
         if (!fromCamera) {
-            capture.release();
+            if (!fromImage)
+                capture.release();
             capture.open(0); // default camera
             if (!capture.isOpened())
                 QMessageBox::warning(this, tr("Tangible2"), tr("Could not open a default camera."), QMessageBox::Ok);
@@ -220,8 +246,8 @@ void MainWindow::toggleFromCamera(bool set) {
         fromCamera = true;
     }
 
-    ui->actionFrom_file->setChecked(/*capture.isOpened() &&*/ !fromCamera);
-    ui->actionFrom_cam0->setChecked(capture.isOpened() && fromCamera);
+    ui->actionFrom_file->setChecked(!fromCamera && (fromImage || capture.isOpened()));
+    ui->actionFrom_cam0->setChecked(fromCamera && capture.isOpened());
 }
 
 void MainWindow::on_actionReset_calibration_triggered()
