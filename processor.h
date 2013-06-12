@@ -55,7 +55,7 @@ private:
      * @brief findMarkers odszukuje markery na zbinaryzowanym obrazku
      * @param binary ramka zbinaryzowanego obrazu
      */
-    std::vector<Marker> findMarkers(const cv::Mat& binary);
+    std::vector<Marker> findMarkers(const cv::Mat& binary, const cv::Mat& grayscale);
 
     /**
      * @brief drawMarker rysuje marker na danym obrazku

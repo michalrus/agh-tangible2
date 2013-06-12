@@ -28,8 +28,8 @@ void Processor::process(const Mat& frame, bool control) {
     // zostaną (teoretycznie) zwolnione
     // (a do frame nie możemy pisać)
     // od tej pory działamy tylko na debug
-    //frame.copyTo(debug);
-    cv::flip(frame, debug, 1);
+    frame.copyTo(debug);
+    //cv::flip(debug, debug, 1);
 
     // 3. jeśli user dokonał już kalibracji, transformuj każdą klatkę
     if (warping) {
@@ -37,11 +37,15 @@ void Processor::process(const Mat& frame, bool control) {
         warpPerspective(debug, debug, warpPerspectiveTransformMatrix, debug.size(), INTER_LINEAR, BORDER_REPLICATE);
     }
 
+    // konwersja na odcienie szarości (typ unsigned 8-bit int (uchar))
+    Mat grayscale;
+    cvtColor(frame, grayscale, CV_BGR2GRAY);
+
     // 4. binaryzacja (potrzebna i do działania, i do kalibracji
-    Mat binary = binarize(debug);
+    Mat binary = binarize(grayscale);
 
     // 5. znajdź markery tej konkretnej ramki
-    vector<Marker> markers = findMarkers(binary);
+    vector<Marker> markers = findMarkers(binary, grayscale);
 
     // 6. każ mózgowi operacji porównać je z poprzednimi stanami
     //    -- lepsze śledzenie -- a oprócz tego ew zareagować na
@@ -63,10 +67,10 @@ void Processor::process(const Mat& frame, bool control) {
     }
 }
 
-Mat Processor::binarize(const Mat& frame) {
+Mat Processor::binarize(const Mat& grayscale) {
     // ustaw odpowiednio strel, jeśli zmienił się rozmiar ramki od ostatniej
-    if (frame.cols != prevCols) {
-        int strelOpenSize = frame.cols * 0.01;
+    if (grayscale.cols != prevCols) {
+        int strelOpenSize = grayscale.cols * 0.01;
         if (strelOpenSize % 2 == 0)
             strelOpenSize++; // musi być nieparzysty
         if (strelOpenSize < 3)
@@ -80,21 +84,19 @@ Mat Processor::binarize(const Mat& frame) {
             strelCloseSize = 3; // najmniejszy to 3
         strelClose = getStructuringElement(CV_SHAPE_ELLIPSE, Size(strelCloseSize, strelCloseSize));
 
-        prevCols = frame.cols;
+        prevCols = grayscale.cols;
     }
 
     Mat binary;
 
-    // konwersja na odcienie szarości (typ unsigned 8-bit int (uchar))
-    cvtColor(frame, binary, CV_BGR2GRAY);
-
     // rozmiar bloku do adaptywnej binaryzacji jako 10% szerokości ramki
-    int blockSize = 0.15 * frame.cols;
+    int blockSize = 0.15 * grayscale.cols;
     if (blockSize % 2 == 0)
         blockSize++; // rozmiar bloku musi być nieparzysty
 
     // adaptacyjna binaryzacja
-    adaptiveThreshold(binary, binary, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, blockSize, 0);
+    //blur(binary, binary, Size(7, 7));
+    adaptiveThreshold(grayscale, binary, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, blockSize, 0);
 
     // otwórz śmieci
     morphologyEx(binary, binary, CV_MOP_OPEN, strelOpen);
@@ -177,7 +179,7 @@ void Processor::calibrate(const std::vector<Marker>& markers) {
     warping = true;
 }
 
-std::vector<Marker> Processor::findMarkers(const Mat& binary) {
+std::vector<Marker> Processor::findMarkers(const Mat& binary, const Mat& grayscale) {
     using std::vector;
     vector<Marker> markers;
 
@@ -189,20 +191,33 @@ std::vector<Marker> Processor::findMarkers(const Mat& binary) {
     findContours(binary, contours, hierarchy,
                  CV_RETR_CCOMP, CV_CHAIN_APPROX_TC89_KCOS);
 
-    drawContours(binary, contours, -1, Scalar(255, 255, 255));
-
     if (!contours.size()) // avoid sigsegv ;)
         return markers;
 
+    //drawContours(binary, contours, -1, Scalar(255, 255, 255));
+
     // 2. compare contours to our knowledge base (each-each)
 
-    // jeszcze:
-    // użyć approxPolyDP? żeby "wygładzić" kształty -- jeśli miałby
-    // być jakiś problem z rozpoznawaniem po dodaniu kilku nowych
+    // porównujemy tylko zewnętrzne kontury, ponieważ
+    // binaryzacja adaptacyjna zżera środki dużych figur;
+    // nie da się dobrać odpowiedniego bloku do niej, żeby
+    // nie znikał trójkąt, a jednocześnie nie robiła się dziura
+    // w dużym zatkanym trójkącie
+    // dlatego badamy kształty zewnętrzne oraz jasność piksela na
+    // samym środku kształtu; jeśli jest jaśniejszy od średniej jasności
+    // kształtu, znaczy to, że kształ jest pusty; w przeciwnym razie pełny
+    // dla pełnych kształtów central/mean = ok. 94%
+    // dla pustych kształtów central/mean = ok. 110%
+    // więc działa i to całkiem nieźle ;)
+    for(int idx = 0; idx >= 0; idx = hierarchy[idx][0]) {
+        // jeśli pole konturu < 5%^2 pola ramki, nie uwzględniaj go jako markera
+        // ... czyli ostateczna rozgrywka ze "śmieciami"
+        // to samo gdy > 30%^2 (ręka?)
+        double area = contourArea(contours[idx]);
+        if (area < 0.05 * 0.05 * frameArea || area > 0.30 * 0.30 * frameArea)
+            continue;
 
-    vector<std::string> recognizedShapes;
-
-    for (size_t idx = 0; idx < contours.size(); idx++) {
+        // porównaj z każdym elementem z bazy wiedzy
         double bestMatch = INFINITY;
         int bestI = -1;
         for (size_t i = 0; i < knownContours.size(); i++) {
@@ -213,42 +228,39 @@ std::vector<Marker> Processor::findMarkers(const Mat& binary) {
             }
         }
 
-        recognizedShapes.push_back(knownContours[bestI].name);
-    }
-
-    for(int idx = 0; idx >= 0; idx = hierarchy[idx][0]) {
-        // jeśli pole konturu < 5%^2 pola ramki, nie uwzględniaj go jako markera
-        // ... czyli ostateczna rozgrywka ze "śmieciami"
-        // to samo gdy > 30%^2
-        double area = contourArea(contours[idx]);
-        if (area < 0.05 * 0.05 * frameArea || area > 0.30 * 0.30 * frameArea)
+        // odrzuć na pewno błędne matche
+        // to jest niesamowity odśmiecający trick, hell yeah
+        if (bestMatch > 0.3)
             continue;
 
-        std::string name = recognizedShapes[idx];
-        if (hierarchy[idx][2] >= 0) { // if this contour has a hole (child) in it
-            // sprawdź czy pole dziecka nie jest za małe w stosunku
-            // do rodzica (czy to nie śmieć)
-            double holeArea = contourArea(contours[hierarchy[idx][2]]);
-            if (holeArea > 0.05 * area)
-                name = "e." + name;
-        }
+        // create the Marker
+        Marker marker;
+        marker.name = knownContours[bestI].name;
+
+        // get the center of gravity rather than center of bounding box
+        // (especially important in triangle case)
+        Moments moms = moments(contours[idx]);
+        double realX = (moms.m10 / moms.m00);
+        double realY = (moms.m01 / moms.m00);
+        marker.x = realX / (frameCenter.x * 2); // get relative (x,y)
+        marker.y = realY / (frameCenter.y * 2);
+
+        // sprawdź średni kolor w obrębie konturu i jak odbiega od niego kolor środka ciężkości
+        Mat mask = Mat::zeros(grayscale.rows, grayscale.cols, CV_8UC1);
+        drawContours(mask, contours, idx, Scalar(255, 255, 255), CV_FILLED);
+        double avg = mean(grayscale, mask)(0);
+        double central = grayscale.at<uchar>(realY, realX);
+        if (central > avg) // znaczy, że marker w środku pusty
+            marker.name = "e." + marker.name;
 
         // enclosing circle
         cv::Point2f enclCircleCenter;
         float enclCircleRadius;
         minEnclosingCircle(contours[idx], enclCircleCenter, enclCircleRadius);
+        marker.radius = enclCircleRadius;
 
-        // get the center of gravity rather than center of bounding box
-        // (especially important in triangle case)
-        Moments moms = moments(contours[idx]);
-
-        Marker tmp;
-        tmp.name = name;
-        tmp.radius = enclCircleRadius;
-        tmp.x = (moms.m10 / moms.m00) / (frameCenter.x * 2); // get relative (x,y)
-        tmp.y = (moms.m01 / moms.m00) / (frameCenter.y * 2);
-
-        markers.push_back(tmp);
+        // push it to current frame marker vector
+        markers.push_back(marker);
     }
 
     return markers;
