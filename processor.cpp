@@ -90,7 +90,7 @@ Mat Processor::binarize(const Mat& grayscale) {
     Mat binary;
 
     // rozmiar bloku do adaptywnej binaryzacji jako 10% szerokości ramki
-    int blockSize = 0.15 * grayscale.cols;
+    int blockSize = 0.10 * grayscale.cols;
     if (blockSize % 2 == 0)
         blockSize++; // rozmiar bloku musi być nieparzysty
 
