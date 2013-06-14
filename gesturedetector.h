@@ -26,6 +26,11 @@ public:
 
 private:
     /**
+     * @brief detectGestures rozpoznaje gesty z "bezwładnościowych" markerów
+     */
+    void detectGestures();
+
+    /**
      * @brief markers "lepsze" markery -- biorąc pod uwagę kilka ostatnich klatek (większa bezwładność)
      */
     std::vector<Marker> markers;
@@ -39,6 +44,11 @@ private:
      * @brief lastClickFrame numer ramki w której ostatnio klikaliśmy
      */
     size_t lastClickFrame;
+
+    /**
+     * @brief frameNumber ile klatek upłynęło od początku programu
+     */
+    size_t frameNumber;
 };
 
 #endif // GESTUREDETECTOR_H

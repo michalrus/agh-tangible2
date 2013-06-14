@@ -230,12 +230,16 @@ std::vector<Marker> Processor::findMarkers(const Mat& binary, const Mat& graysca
 
         // odrzuć na pewno błędne matche
         // to jest niesamowity odśmiecający trick, hell yeah
-        if (bestMatch > 0.3)
+        if (bestMatch > 1.5)
             continue;
 
         // create the Marker
         Marker marker;
         marker.name = knownContours[bestI].name;
+
+        //std::ostringstream os;
+        //os << knownContours[bestI].name << " " << bestMatch;
+        //marker.name = os.str();
 
         // get the center of gravity rather than center of bounding box
         // (especially important in triangle case)
